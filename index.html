@@ -2,26 +2,28 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>🏆 A2 Flyers 15題隨機衝刺挑戰賽</title>
+  <title>🏆 A2 Flyers 衝刺挑戰賽 (錯題循環掌握版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; padding: 15px; background: #eef2f7; color: #333; display: flex; justify-content: center; align-items: center; min-height: 90vh; margin: 0; }
     .card { background: white; padding: 30px 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); width: 100%; max-width: 500px; text-align: center; box-sizing: border-box; }
     .badge { background: #3498db; color: white; padding: 4px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-    .q-text { font-size: 20px; margin: 20px 0; font-weight: bold; line-height: 1.4; color: #2c3e50; }
-    .btn { background: #2ecc71; color: white; border: none; padding: 14px 20px; border-radius: 25px; cursor: pointer; font-size: 17px; margin: 8px 0; width: 100%; font-weight: bold; }
+    .q-text { font-size: 19px; margin: 18px 0; font-weight: bold; line-height: 1.4; color: #2c3e50; }
+    .btn { background: #2ecc71; color: white; border: none; padding: 13px 20px; border-radius: 25px; cursor: pointer; font-size: 16px; margin: 6px 0; width: 100%; font-weight: bold; }
     .btn:hover { background: #27ae60; }
     .btn-audio { background: #e67e22; }
     .btn-mic { background: #e74c3c; }
-    .opt-btn { background: #f8f9fa; border: 2px solid #dfe4ea; padding: 14px; border-radius: 12px; width: 100%; text-align: left; margin: 6px 0; cursor: pointer; font-size: 16px; box-sizing: border-box; }
+    .btn-skip { background: #95a5a6; }
+    .btn-skip:hover { background: #7f8c8d; }
+    .opt-btn { background: #f8f9fa; border: 2px solid #dfe4ea; padding: 13px; border-radius: 12px; width: 100%; text-align: left; margin: 6px 0; cursor: pointer; font-size: 15px; box-sizing: border-box; }
     .opt-btn:hover { background: #ffeaa7; }
-    .input-box { width: 100%; padding: 12px; font-size: 18px; border: 2px solid #ccc; border-radius: 10px; margin-bottom: 12px; text-align: center; box-sizing: border-box; }
+    .input-box { width: 100%; padding: 12px; font-size: 17px; border: 2px solid #ccc; border-radius: 10px; margin-bottom: 10px; text-align: center; box-sizing: border-box; }
     .result-box { margin-top: 15px; padding: 15px; border-radius: 10px; display: none; text-align: left; font-size: 15px; line-height: 1.5; }
     .success-box { background: #e8f8f5; border-left: 5px solid #2ecc71; color: #27ae60; }
     .error-box { background: #fdf2f2; border-left: 5px solid #e74c3c; color: #c0392b; }
-    .score-big { font-size: 36px; color: #e74c3c; font-weight: bold; margin: 15px 0; }
+    .score-big { font-size: 36px; color: #2ecc71; font-weight: bold; margin: 15px 0; }
     .error-item { text-align: left; background: #fff5f5; padding: 12px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #e74c3c; font-size: 14px; line-height: 1.5; }
-    .sync-status { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
+    .repeat-tag { display: inline-block; background: #e67e22; color: white; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
   </style>
 </head>
 <body>
@@ -29,7 +31,7 @@
   <span class="badge" id="type-badge">FLYERS MOCK</span>
   <div id="quiz-area" style="min-height: 180px; display: flex; flex-direction: column; justify-content: center;">
     <h3 style="color:#2c3e50; margin-bottom:20px;">🏆 A2 Flyers 模擬測驗已準備就緒</h3>
-    <p style="color:#7f8c8d; font-size:15px; margin-bottom:25px;">隨機抽取三大題型（聽力、讀寫、口說）共 15 題衝刺訓練。</p>
+    <p style="color:#7f8c8d; font-size:15px; margin-bottom:25px;">隨機出題，遇到錯題或跳過會自動循環複習，直到完全答對！</p>
     <button class="btn" id="start-btn" style="background:#3498db; padding:16px;">✨ 點擊開始挑戰 🚀</button>
   </div>
   <div id="feedback-area" class="result-box"></div>
@@ -38,186 +40,284 @@
 
 <script>
   (function() {
-    // ⚠️ 請在此處貼上你發布的 Apps Script 網頁應用程式 URL
+    // ⚠️ 請填入你的 Google Apps Script 網頁應用程式 URL
     var GAS_URL = "https://script.google.com/macros/s/AKfycby4OJml0pHntGYmXHIE-Or87DWJhvJTE6vAMY1Vucqv_JDx2OYbFsQfxpHPdd07P1XpLw/exec";
 
-    var pool = [
-      {t:"listening", q:"Where is the cinema? It is opposite the big train station, next to the library.", o:["Opposite the park", "Opposite the train station", "Behind the school"], a:"Opposite the train station", e:"聽力提到在火車站對面（opposite the big train station）。"},
-      {t:"listening", q:"What did Mary buy at the shop? She went to look at the comics, but she only bought a beautiful postcard.", o:["A comic book", "A beautiful postcard", "A bottle of water"], a:"A beautiful postcard", e:"雖然 Mary 有去看漫畫，但她最後只有買（only bought）一張明信片喔。"},
-      {t:"listening", q:"What time does the football match start? It usually starts at three, but today it will begin at four thirty.", o:["3:00", "4:00", "4:30"], a:"4:30", e:"時間陷阱！關鍵在於後半句提到 today it will begin at 4:30。"},
-      {t:"listening", q:"Who is David? He is the boy wearing a green sweater and carrying a guitar.", o:["The boy with a guitar", "The boy playing football", "The boy reading a book"], a:"The boy with a guitar", e:"David 的特徵是拿著吉他（carrying a guitar）。"},
-      {t:"listening", q:"What did the children do at the beach yesterday? It was windy, so they flew their kites all afternoon.", o:["They went swimming", "They flew kites", "They played volleyball"], a:"They flew kites", e:"孩子們因為風大（windy），所以整個下午都在放風箏（flew their kites）。"},
-      {t:"reading", q:"This person flies planes to different countries around the world.", o:[], a:"pilot", e:"開飛機的職業在英文中是 pilot（飛行員）。"},
-      {t:"reading", q:"Complete the sentence: My brother is _____ than me, so he can reach the top shelf.", o:[], a:"taller", e:"後面有出現比較級的關鍵字 than，所以空格必須填入 taller（更高）。"},
-      {t:"reading", q:"You go to see this person when you have a terrible toothache.", o:[], a:"dentist", e:"牙齒痛時要去看 dentist（牙醫），這是 Flyers 必考健康字彙。"},
-      {t:"reading", q:"Complete the sentence: Look! The birds _____ beautifully in the garden right now.", o:[], a:"are singing", e:"看到 right now（現在/正在），且主詞 birds 是複數，要用現在進行式 are singing。"},
-      {t:"reading", q:"This is a large animal that lives in the desert and can walk for days without water.", o:[], a:"camel", e:"沙漠（desert）中不需要喝水也能走好幾天的代表性動物是 camel（駱駝）。"},
-      {t:"speaking", q:"Look at the picture. Find the differences. (In Pic A, the monkey is eating a banana. In Pic B, the monkey is climbing a tree.)", o:["monkey", "banana", "climb", "tree"], a:"The monkey is climbing a tree / eating a banana.", e:"口說表達：只要回答中提到猴子(monkey)、香蕉(banana)或爬樹(climb/tree)等重點即算對！", img:"https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&fit=crop&w=400&q=80"},
-      {t:"speaking", q:"Look at the picture. What are the differences? (In Pic A, the weather is sunny. In Pic B, it is raining heavily.)", o:["weather", "sunny", "rain", "cloud"], a:"In Pic A it is sunny, but in Pic B it is raining.", e:"口說表達：孩子只要成功描述出晴天（sunny）或下雨（rain/raining）的天氣對比即可！", img:"https://images.unsplash.com/photo-1514632595-4944383f2737?auto=format&fit=crop&w=400&q=80"},
-      {t:"speaking", q:"Look at the pictures. Find the differences. (In Pic A, there are three boys playing. In Pic B, there are two girls playing.)", o:["boys", "girls", "playing", "three"], a:"In Pic A there are three boys, in Pic B there are two girls.", e:"口說表達：重點在於數量的改變（three/two）以及性別人稱（boys/girls）的切換。", img:"https://images.unsplash.com/photo-1485546246426-74dc88dec4d9?auto=format&fit=crop&w=400&q=80"},
-      {t:"speaking", q:"Look at the pictures. What is different? (In Pic A, the dog is sleeping under the table. In Pic B, the cat is sleeping on the sofa.)", o:["dog", "cat", "table", "sofa"], a:"Pic A has a dog under the table, Pic B has a cat on the sofa.", e:"口說表達：核心在於動物特徵（dog/cat）與其所在位置空間（table/sofa）的交叉對比描述。", img:"https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80"},
-      {t:"speaking", q:"Look at the pictures. Find the difference. (In Pic A, the girl is wearing a red hat. In Pic B, she is not wearing a hat.)", o:["hat", "wearing", "red", "girl"], a:"In Pic A she wears a red hat, but in Pic B she does not.", e:"口說表達：核心關鍵字是 hat (帽子) 或 wearing (穿戴)，有描述出帽子有無即可通關。", img:"https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=400&q=80"}
+    var originalPool = [
+      {id:1, t:"listening", q:"Where is the cinema? It is opposite the big train station, next to the library.", o:["Opposite the park", "Opposite the train station", "Behind the school"], a:"Opposite the train station", e:"聽力提到在火車站對面（opposite the big train station）。"},
+      {id:2, t:"listening", q:"What did Mary buy at the shop? She went to look at the comics, but she only bought a beautiful postcard.", o:["A comic book", "A beautiful postcard", "A bottle of water"], a:"A beautiful postcard", e:"雖然 Mary 有去看漫畫，但她最後只有買（only bought）一張明信片。"},
+      {id:3, t:"listening", q:"What time does the football match start? It usually starts at three, but today it will begin at four thirty.", o:["3:00", "4:00", "4:30"], a:"4:30", e:"時間陷阱！關鍵在於後半句提到 today it will begin at 4:30。"},
+      {id:4, t:"listening", q:"Who is David? He is the boy wearing a green sweater and carrying a guitar.", o:["The boy with a guitar", "The boy playing football", "The boy reading a book"], a:"The boy with a guitar", e:"David 的特徵是拿著吉他（carrying a guitar）。"},
+      {id:5, t:"listening", q:"What did the children do at the beach yesterday? It was windy, so they flew their kites all afternoon.", o:["They went swimming", "They flew kites", "They played volleyball"], a:"They flew kites", e:"孩子們因為風大（windy），所以整個下午都在放風箏（flew their kites）。"},
+      {id:6, t:"reading", q:"This person flies planes to different countries around the world.", o:[], a:"pilot", e:"開飛機的職業在英文中是 pilot（飛行員）。"},
+      {id:7, t:"reading", q:"Complete the sentence: My brother is _____ than me, so he can reach the top shelf.", o:[], a:"taller", e:"後面有比較級關鍵字 than，空格填 taller。"},
+      {id:8, t:"reading", q:"You go to see this person when you have a terrible toothache.", o:[], a:"dentist", e:"牙齒痛時要去看 dentist（牙醫）。"},
+      {id:9, t:"reading", q:"Complete the sentence: Look! The birds _____ beautifully in the garden right now.", o:[], a:"are singing", e:"看到 right now，主詞 birds 是複數，用現在進行式 are singing。"},
+      {id:10, t:"reading", q:"This is a large animal that lives in the desert and can walk for days without water.", o:[], a:"camel", e:"沙漠中不需要喝水也能走好幾天的動物是 camel（駱駝）。"},
+      {id:11, t:"speaking", q:"Look at the picture. Find the differences. (In Pic A, the monkey is eating a banana. In Pic B, the monkey is climbing a tree.)", o:["monkey", "banana", "climb", "tree"], a:"The monkey is climbing a tree / eating a banana.", e:"回答中提到猴子(monkey)、香蕉(banana)或爬樹(climb/tree)皆可！", img:"https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&fit=crop&w=400&q=80"},
+      {id:12, t:"speaking", q:"Look at the picture. What are the differences? (In Pic A, the weather is sunny. In Pic B, it is raining heavily.)", o:["weather", "sunny", "rain", "cloud"], a:"In Pic A it is sunny, but in Pic B it is raining.", e:"描述出晴天（sunny）或下雨（rain）的天氣對比即可！", img:"https://images.unsplash.com/photo-1514632595-4944383f2737?auto=format&fit=crop&w=400&q=80"},
+      {id:13, t:"speaking", q:"Look at the pictures. Find the differences. (In Pic A, there are three boys playing. In Pic B, there are two girls playing.)", o:["boys", "girls", "playing", "three"], a:"In Pic A there are three boys, in Pic B there are two girls.", e:"重點在數量（three/two）及性別（boys/girls）。", img:"https://images.unsplash.com/photo-1485546246426-74dc88dec4d9?auto=format&fit=crop&w=400&q=80"},
+      {id:14, t:"speaking", q:"Look at the pictures. What is different? (In Pic A, the dog is sleeping under the table. In Pic B, the cat is sleeping on the sofa.)", o:["dog", "cat", "table", "sofa"], a:"Pic A has a dog under the table, Pic B has a cat on the sofa.", e:"重點在動物（dog/cat）與其所在位置（table/sofa）。", img:"https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80"},
+      {id:15, t:"speaking", q:"Look at the pictures. Find the difference. (In Pic A, the girl is wearing a red hat. In Pic B, she is not wearing a hat.)", o:["hat", "wearing", "red", "girl"], a:"In Pic A she wears a red hat, but in Pic B she does not.", e:"關鍵字是 hat (帽子) 或 wearing (穿戴)。", img:"https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=400&q=80"}
     ];
 
-    var idx = 0; 
-    var wrongs = [];
+    var queue = [];
+    var currentItem = null;
+    var completedCount = 0;
+    var totalBaseCount = 0;
+    var allWrongsLog = [];
+
+    // 停止所有正在播放的語音
+    function stopAudio() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    // 亂數洗牌
+    function shuffle(arr) {
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = arr[i]; arr[i] = arr[j]; arr[j] = temp;
+      }
+      return arr;
+    }
 
     document.getElementById("start-btn").addEventListener("click", function() {
-      for (var i = pool.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = pool[i]; pool[i] = pool[j]; pool[j] = temp;
-      }
-      idx = 0;
-      wrongs = [];
-      renderCard();
+      stopAudio();
+      // 複製一份題庫並亂數排序
+      queue = shuffle(JSON.parse(JSON.stringify(originalPool)));
+      totalBaseCount = queue.length;
+      completedCount = 0;
+      allWrongsLog = [];
+      nextQuestion();
     });
 
     document.getElementById("next-btn").addEventListener("click", function() {
-      idx++;
-      if (idx < pool.length) { 
-        renderCard(); 
-      } else { 
-        showReport(); 
-      }
+      stopAudio();
+      nextQuestion();
     });
 
-    function renderCard() {
-      var item = pool[idx];
-      document.getElementById("type-badge").innerText = "Question " + (idx + 1) + " / " + pool.length + " [" + item.t.toUpperCase() + "]";
+    function nextQuestion() {
+      if (queue.length === 0) {
+        showReport();
+        return;
+      }
+      // 取出隊列中的第一題
+      currentItem = queue.shift();
+      renderCard(currentItem);
+    }
+
+    function renderCard(item) {
+      stopAudio();
+      var badgeText = "進度：" + (completedCount + 1) + " / " + totalBaseCount + " [" + item.t.toUpperCase() + "]";
+      if (item.isRetry) {
+        badgeText += " (錯題再練習)";
+      }
+      document.getElementById("type-badge").innerText = badgeText;
       document.getElementById("feedback-area").style.display = "none";
       document.getElementById("next-btn").style.display = "none";
-      var area = document.getElementById("quiz-area"); 
-      area.innerHTML = "";
       
+      var area = document.getElementById("quiz-area");
+      area.innerHTML = "";
+
+      // 1. 聽力題
       if (item.t === "listening") {
-        var p = document.createElement("p"); p.className = "q-text"; p.innerText = "Listen and choose the right answer."; area.appendChild(p);
-        var ab = document.createElement("button"); ab.className = "btn btn-audio"; ab.innerText = "🔊 點我聽題目 (Listen)";
-        ab.onclick = function() { 
-          if ('speechSynthesis' in window) { 
-            window.speechSynthesis.cancel(); 
-            var u = new SpeechSynthesisUtterance(item.q); 
-            u.lang = 'en-US'; 
-            u.rate = 0.75; 
-            window.speechSynthesis.speak(u); 
-          } 
+        var p = document.createElement("p");
+        p.className = "q-text";
+        p.innerText = "Listen and choose the right answer.";
+        area.appendChild(p);
+
+        var ab = document.createElement("button");
+        ab.className = "btn btn-audio";
+        ab.innerText = "🔊 點我聽題目 (Listen)";
+        ab.onclick = function() {
+          stopAudio();
+          var u = new SpeechSynthesisUtterance(item.q);
+          u.lang = 'en-US';
+          u.rate = 0.75;
+          window.speechSynthesis.speak(u);
         };
         area.appendChild(ab);
-        var box = document.createElement("div"); box.style.marginTop = "10px";
+
+        var box = document.createElement("div");
+        box.style.marginTop = "10px";
         for (var i = 0; i < item.o.length; i++) {
           (function(txt) {
-            var b = document.createElement("button"); b.className = "opt-btn"; b.innerText = txt;
-            b.onclick = function() { checkAns(txt, txt.toLowerCase() === item.a.toLowerCase()); };
+            var b = document.createElement("button");
+            b.className = "opt-btn";
+            b.innerText = txt;
+            b.onclick = function() {
+              checkAns(txt, txt.toLowerCase() === item.a.toLowerCase());
+            };
             box.appendChild(b);
           })(item.o[i]);
         }
         area.appendChild(box);
       } 
+      // 2. 讀寫題
       else if (item.t === "reading") {
-        var p = document.createElement("p"); p.className = "q-text"; p.innerText = item.q; area.appendChild(p);
-        var ip = document.createElement("input"); ip.type = "text"; ip.id = "user-ip"; ip.className = "input-box"; ip.placeholder = "請輸入答案..."; ip.autocomplete = "off"; area.appendChild(ip);
-        var cb = document.createElement("button"); cb.className = "btn"; cb.innerText = "檢查答案 (Check)";
-        cb.onclick = function() { 
-          var val = document.getElementById("user-ip").value.trim(); 
-          checkAns(val, val.toLowerCase() === item.a.toLowerCase()); 
+        var p = document.createElement("p");
+        p.className = "q-text";
+        p.innerText = item.q;
+        area.appendChild(p);
+
+        var ip = document.createElement("input");
+        ip.type = "text";
+        ip.id = "user-ip";
+        ip.className = "input-box";
+        ip.placeholder = "請輸入答案...";
+        ip.autocomplete = "off";
+        area.appendChild(ip);
+
+        var cb = document.createElement("button");
+        cb.className = "btn";
+        cb.innerText = "檢查答案 (Check)";
+        cb.onclick = function() {
+          var val = document.getElementById("user-ip").value.trim();
+          checkAns(val, val.toLowerCase() === item.a.toLowerCase());
         };
         area.appendChild(cb);
       } 
+      // 3. 口說題
       else if (item.t === "speaking") {
-        var p = document.createElement("p"); p.className = "q-text"; p.innerText = "Look and find the differences."; area.appendChild(p);
-        if (item.img) { 
-          var img = document.createElement("img"); 
-          img.src = item.img; 
-          img.style.maxWidth = "100%"; 
-          img.style.maxHeight = "160px"; 
-          img.style.borderRadius = "10px"; 
-          img.style.marginBottom = "10px"; 
-          img.style.display = "block"; 
-          img.style.margin = "0 auto 10px auto"; 
-          area.appendChild(img); 
+        var p = document.createElement("p");
+        p.className = "q-text";
+        p.innerText = "Look and find the differences.";
+        area.appendChild(p);
+
+        if (item.img) {
+          var img = document.createElement("img");
+          img.src = item.img;
+          img.style.maxWidth = "100%";
+          img.style.maxHeight = "160px";
+          img.style.borderRadius = "10px";
+          img.style.margin = "0 auto 10px auto";
+          img.style.display = "block";
+          area.appendChild(img);
         }
 
-        var mb = document.createElement("button"); mb.className = "btn btn-mic"; mb.innerText = "🎙️ 開始錄音答題";
+        var mb = document.createElement("button");
+        mb.className = "btn btn-mic";
+        mb.innerText = "🎙️ 開始錄音答題";
         mb.onclick = function() {
           var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-          if (!SR) { alert("此瀏覽器不支援即時語音辨識，建議使用 Chrome 瀏覽器。"); return; }
-          var rec = new SR(); 
-          rec.lang = 'en-US'; 
+          if (!SR) { alert("此瀏覽器不支援語音辨識，請使用 Chrome。"); return; }
+          var rec = new SR();
+          rec.lang = 'en-US';
           rec.onstart = function() { mb.innerText = "🛑 正在聽你說話..."; };
-          rec.onresult = function(e) { 
-            var text = e.results[0][0].transcript; 
-            mb.innerText = "🎙️ 開始錄音答題"; 
+          rec.onresult = function(e) {
+            var text = e.results[0][0].transcript;
+            mb.innerText = "🎙️ 開始錄音答題";
             var isMatched = item.o.some(function(k) { return text.toLowerCase().includes(k.toLowerCase()); });
-            checkAns(text, isMatched); 
+            checkAns(text, isMatched);
           };
-          rec.onerror = function() { mb.innerText = "🎙️ 開始錄音答題"; alert("錄音失敗，請檢查麥克風權限。"); };
+          rec.onerror = function() { mb.innerText = "🎙️ 開始錄音答題"; alert("錄音失敗，請檢查麥克風。"); };
           rec.start();
         };
         area.appendChild(mb);
-        var transDiv = document.createElement("div"); transDiv.innerText = ""; transDiv.style.fontSize="13px"; transDiv.style.color="#7f8c8d"; transDiv.style.marginTop="8px"; area.appendChild(transDiv);
       }
+
+      // 新增：不會寫跳過按鈕
+      var skipBtn = document.createElement("button");
+      skipBtn.className = "btn btn-skip";
+      skipBtn.innerText = "⏭️ 不會寫，跳過 (看答案)";
+      skipBtn.onclick = function() {
+        checkAns("(主動跳過)", false, true);
+      };
+      area.appendChild(skipBtn);
     }
 
-    function checkAns(userAns, isPassed) {
-      var item = pool[idx]; 
-      var box = document.getElementById("feedback-area"); 
+    function checkAns(userAns, isPassed, isSkip) {
+      stopAudio(); // 答題時即刻停止朗讀
+      var box = document.getElementById("feedback-area");
       box.style.display = "block";
-      if (isPassed) { 
-        box.className = "result-box success-box"; 
-        box.innerHTML = "<strong>⭕ 答對了！太棒了！</strong><br>解釋：" + item.e; 
-      } else {
-        box.className = "result-box error-box"; 
-        box.innerHTML = "<strong>❌ 答錯囉！再接再厲！</strong><br>正確答案是：<b>" + item.a + "</b><br>解釋：" + item.e;
-        wrongs.push({ n: idx + 1, t: item.t.toUpperCase(), q: item.q, u: userAns || "(未答)", a: item.a, e: item.e });
+
+      // 禁用題目區的按鈕，防止重複作答
+      var buttons = document.getElementById("quiz-area").getElementsByTagName("button");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].disabled = true;
       }
+
+      if (isPassed) {
+        box.className = "result-box success-box";
+        box.innerHTML = "<strong>⭕ 答對了！太棒了！</strong><br>解釋：" + currentItem.e;
+        completedCount++;
+      } else {
+        box.className = "result-box error-box";
+        var title = isSkip ? "<strong>⏭️ 已跳過本題！請記下正確答案：</strong>" : "<strong>❌ 答錯囉！這題稍後會再出現一次：</strong>";
+        box.innerHTML = title + "<br>正確答案是：<b>" + currentItem.a + "</b><br>解釋：" + currentItem.e;
+
+        // 標記為錯題重試題，重新推回題庫陣列末端（錯了可以重複出，直到正確為止）
+        currentItem.isRetry = true;
+        queue.push(currentItem);
+
+        // 記錄到歷史錯題清單
+        allWrongsLog.push({
+          t: currentItem.t.toUpperCase(),
+          q: currentItem.q,
+          u: userAns,
+          a: currentItem.a,
+          e: currentItem.e
+        });
+
+        // 立即寫入線上試算表
+        sendToSheet(currentItem.t.toUpperCase(), currentItem.q, userAns, currentItem.a, currentItem.e);
+      }
+
       document.getElementById("next-btn").style.display = "block";
     }
 
-    function syncToSheet(score, total, wrongList) {
+    // 發送錯題到 Google Sheets
+    function sendToSheet(type, question, userAns, correctAns, explain) {
       if (!GAS_URL || GAS_URL.indexOf("你的AppsScriptID") !== -1) return;
-      
-      var statusEl = document.getElementById("sync-status");
-      if (statusEl) statusEl.innerText = "⏳ 正在同步測驗紀錄至線上試算表...";
 
+      var payload = JSON.stringify({
+        t: type,
+        q: question,
+        u: userAns,
+        a: correctAns,
+        e: explain
+      });
+
+      // 使用 text/plain 避免 CORS preflight 被擋
       fetch(GAS_URL, {
         method: "POST",
         mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ score: score, total: total, wrongs: wrongList })
-      }).then(function() {
-        if (statusEl) statusEl.innerText = "✅ 測驗紀錄已成功同步至線上試算表！";
-      }).catch(function() {
-        if (statusEl) statusEl.innerText = "⚠️ 同步失敗，請檢查網路連線。";
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: payload
+      }).catch(function(err) {
+        console.error("同步至試算表失敗:", err);
       });
     }
 
     function showReport() {
-      document.getElementById("type-badge").innerText = "📊 今日學習報告";
+      stopAudio();
+      document.getElementById("type-badge").innerText = "📊 挑戰完成";
       document.getElementById("next-btn").style.display = "none";
-      var score = pool.length - wrongs.length;
-      var html = '<h3 style="color:#2c3e50; margin-bottom:5px;">🎉 恭喜完成測試！</h3>';
-      html += '<div class="score-big">' + score + ' / ' + pool.length + '</div>';
+      document.getElementById("feedback-area").style.display = "none";
+
+      var html = '<h3 style="color:#2c3e50; margin-bottom:5px;">🎉 恭喜全部題目皆已掌握！</h3>';
+      html += '<p style="color:#7f8c8d; font-size:14px;">所有題目（包含錯題重試）皆已順利通過。</p>';
       
-      if (wrongs.length === 0) { 
-        html += '<p style="color:#27ae60; font-weight:bold;">🏆 滿分！今天的考題掌握得非常好！</p>'; 
+      if (allWrongsLog.length === 0) {
+        html += '<div class="score-big">100%</div>';
+        html += '<p style="color:#27ae60; font-weight:bold;">🏆 超強！初次作答全部答對，沒有任何失誤！</p>';
       } else {
-        html += '<h4 style="text-align:left; color:#c0392b; margin-top:20px;">💡 今日錯題分析：</h4>';
-        for (var i = 0; i < wrongs.length; i++) {
-          var w = wrongs[i];
+        html += '<h4 style="text-align:left; color:#c0392b; margin-top:20px;">📋 本次練習錯題歷程（已同步試算表）：</h4>';
+        for (var i = 0; i < allWrongsLog.length; i++) {
+          var w = allWrongsLog[i];
           html += '<div class="error-item">';
-          html += '<strong>第 ' + w.n + ' 題 [' + w.t + ']</strong><br>';
-          html += '題目：' + w.q + '<br>';
-          html += '你的回答：<span style="color:#c0392b;">' + w.u + '</span><br>';
+          html += '<strong>[' + w.t + ']</strong> ' + w.q + '<br>';
+          html += '當時作答：<span style="color:#c0392b;">' + w.u + '</span><br>';
           html += '正確答案：<span style="color:#27ae60;">' + w.a + '</span><br>';
           html += '提示：' + w.e;
           html += '</div>';
         }
       }
-      html += '<div id="sync-status" class="sync-status"></div>';
-      html += '<button class="btn" style="background:#3498db; margin-top:15px;" onclick="location.reload();">🔄 重新挑戰</button>';
-      document.getElementById("quiz-area").innerHTML = html;
 
-      // 自動觸發後台寫入試算表
-      syncToSheet(score, pool.length, wrongs);
+      html += '<button class="btn" style="background:#3498db; margin-top:15px;" onclick="location.reload();">🔄 重新開始測驗</button>';
+      document.getElementById("quiz-area").innerHTML = html;
     }
   })();
 </script>
