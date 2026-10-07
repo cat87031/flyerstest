@@ -21,6 +21,7 @@
     .error-box { background: #fdf2f2; border-left: 5px solid #e74c3c; color: #c0392b; }
     .score-big { font-size: 36px; color: #e74c3c; font-weight: bold; margin: 15px 0; }
     .error-item { text-align: left; background: #fff5f5; padding: 12px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #e74c3c; font-size: 14px; line-height: 1.5; }
+    .sync-status { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -37,6 +38,9 @@
 
 <script>
   (function() {
+    // ⚠️ 請在此處貼上你發布的 Apps Script 網頁應用程式 URL
+    var GAS_URL = "https://script.google.com/macros/s/AKfycby4OJml0pHntGYmXHIE-Or87DWJhvJTE6vAMY1Vucqv_JDx2OYbFsQfxpHPdd07P1XpLw/exec";
+
     var pool = [
       {t:"listening", q:"Where is the cinema? It is opposite the big train station, next to the library.", o:["Opposite the park", "Opposite the train station", "Behind the school"], a:"Opposite the train station", e:"聽力提到在火車站對面（opposite the big train station）。"},
       {t:"listening", q:"What did Mary buy at the shop? She went to look at the comics, but she only bought a beautiful postcard.", o:["A comic book", "A beautiful postcard", "A bottle of water"], a:"A beautiful postcard", e:"雖然 Mary 有去看漫畫，但她最後只有買（only bought）一張明信片喔。"},
@@ -168,6 +172,24 @@
       document.getElementById("next-btn").style.display = "block";
     }
 
+    function syncToSheet(score, total, wrongList) {
+      if (!GAS_URL || GAS_URL.indexOf("你的AppsScriptID") !== -1) return;
+      
+      var statusEl = document.getElementById("sync-status");
+      if (statusEl) statusEl.innerText = "⏳ 正在同步測驗紀錄至線上試算表...";
+
+      fetch(GAS_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score: score, total: total, wrongs: wrongList })
+      }).then(function() {
+        if (statusEl) statusEl.innerText = "✅ 測驗紀錄已成功同步至線上試算表！";
+      }).catch(function() {
+        if (statusEl) statusEl.innerText = "⚠️ 同步失敗，請檢查網路連線。";
+      });
+    }
+
     function showReport() {
       document.getElementById("type-badge").innerText = "📊 今日學習報告";
       document.getElementById("next-btn").style.display = "none";
@@ -190,8 +212,12 @@
           html += '</div>';
         }
       }
+      html += '<div id="sync-status" class="sync-status"></div>';
       html += '<button class="btn" style="background:#3498db; margin-top:15px;" onclick="location.reload();">🔄 重新挑戰</button>';
       document.getElementById("quiz-area").innerHTML = html;
+
+      // 自動觸發後台寫入試算表
+      syncToSheet(score, pool.length, wrongs);
     }
   })();
 </script>
